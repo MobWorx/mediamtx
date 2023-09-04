@@ -165,7 +165,6 @@ func (p *Core) createResources(initial bool) error {
 	if p.logger == nil {
 		p.logger, err = logger.New(
 			logger.Level(p.conf.LogLevel),
-			p.conf.LogDestinations,
 			studioID,
 		)
 		if err != nil {

@@ -15,7 +15,7 @@ type Logger struct {
 }
 
 // New allocates a log handler.
-func New(level Level, destinations []Destination, studioID string) (*Logger, error) {
+func New(level Level, studioID string) (*Logger, error) {
 	lh := &Logger{
 		level: level,
 		log: log.With().
