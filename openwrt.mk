@@ -13,7 +13,7 @@ PKG_BUILD_PARALLEL:=1
 PKG_USE_MIPS16:=0
 
 GO_PKG:=github.com/bluenviron/mediamtx
-GO_PKG_LDFLAGS_X:=github.com/bluenviron/mediamtx/internal/core.version=$(PKG_VERSION)
+GO_PKG_LDFLAGS_X:=github.com/bluenviron/mediamtx/pkg/core.version=$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
 include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
