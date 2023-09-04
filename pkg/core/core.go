@@ -451,9 +451,7 @@ func (p *Core) createResources(initial bool) error {
 
 func (p *Core) closeResources(newConf *conf.Conf, calledByAPI bool) {
 	closeLogger := newConf == nil ||
-		newConf.LogLevel != p.conf.LogLevel ||
-		!reflect.DeepEqual(newConf.LogDestinations, p.conf.LogDestinations) ||
-		newConf.LogFile != p.conf.LogFile
+		newConf.LogLevel != p.conf.LogLevel
 	closeMetrics := newConf == nil ||
 		newConf.Metrics != p.conf.Metrics ||
 		newConf.MetricsAddress != p.conf.MetricsAddress ||

@@ -90,23 +90,21 @@ func contains(list []headers.AuthMethod, item headers.AuthMethod) bool {
 // Conf is a configuration.
 type Conf struct {
 	// General
-	LogLevel                  LogLevel        `json:"logLevel"`
-	LogDestinations           LogDestinations `json:"logDestinations"`
-	LogFile                   string          `json:"logFile"`
-	ReadTimeout               StringDuration  `json:"readTimeout"`
-	WriteTimeout              StringDuration  `json:"writeTimeout"`
-	ReadBufferCount           int             `json:"readBufferCount"` // deprecated
-	WriteQueueSize            int             `json:"writeQueueSize"`
-	UDPMaxPayloadSize         int             `json:"udpMaxPayloadSize"`
-	ExternalAuthenticationURL string          `json:"externalAuthenticationURL"`
-	API                       bool            `json:"api"`
-	APIAddress                string          `json:"apiAddress"`
-	Metrics                   bool            `json:"metrics"`
-	MetricsAddress            string          `json:"metricsAddress"`
-	PPROF                     bool            `json:"pprof"`
-	PPROFAddress              string          `json:"pprofAddress"`
-	RunOnConnect              string          `json:"runOnConnect"`
-	RunOnConnectRestart       bool            `json:"runOnConnectRestart"`
+	LogLevel                  LogLevel       `json:"logLevel"`
+	ReadTimeout               StringDuration `json:"readTimeout"`
+	WriteTimeout              StringDuration `json:"writeTimeout"`
+	ReadBufferCount           int            `json:"readBufferCount"` // deprecated
+	WriteQueueSize            int            `json:"writeQueueSize"`
+	UDPMaxPayloadSize         int            `json:"udpMaxPayloadSize"`
+	ExternalAuthenticationURL string         `json:"externalAuthenticationURL"`
+	API                       bool           `json:"api"`
+	APIAddress                string         `json:"apiAddress"`
+	Metrics                   bool           `json:"metrics"`
+	MetricsAddress            string         `json:"metricsAddress"`
+	PPROF                     bool           `json:"pprof"`
+	PPROFAddress              string         `json:"pprofAddress"`
+	RunOnConnect              string         `json:"runOnConnect"`
+	RunOnConnectRestart       bool           `json:"runOnConnectRestart"`
 
 	// RTSP
 	RTSP              bool        `json:"rtsp"`
@@ -322,8 +320,6 @@ func (conf *Conf) Check() error {
 func (conf *Conf) UnmarshalJSON(b []byte) error {
 	// general
 	conf.LogLevel = LogLevel(logger.Info)
-	conf.LogDestinations = LogDestinations{logger.DestinationStdout}
-	conf.LogFile = "mediamtx.log"
 	conf.ReadTimeout = 10 * StringDuration(time.Second)
 	conf.WriteTimeout = 10 * StringDuration(time.Second)
 	conf.WriteQueueSize = 512
