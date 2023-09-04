@@ -8,7 +8,6 @@ import (
 	"os/signal"
 	"reflect"
 
-	"github.com/alecthomas/kong"
 	"github.com/bluenviron/gortsplib/v4"
 	"github.com/gin-gonic/gin"
 
@@ -19,12 +18,10 @@ import (
 	"github.com/bluenviron/mediamtx/pkg/rlimit"
 )
 
-var version = "v0.0.0"
-
-var cli struct {
-	Version  bool   `help:"print version"`
-	Confpath string `arg:"" default:"mediamtx.yml"`
-}
+var (
+	version  = "v0.0.0"
+	studioID string
+)
 
 // Core is an instance of mediamtx.
 type Core struct {
@@ -57,39 +54,18 @@ type Core struct {
 
 // New allocates a core.
 func New(args []string) (*Core, bool) {
-	parser, err := kong.New(&cli,
-		kong.Description("MediaMTX "+version),
-		kong.UsageOnError(),
-		kong.ValueFormatter(func(value *kong.Value) string {
-			switch value.Name {
-			case "confpath":
-				return "path to a config file. The default is mediamtx.yml."
-
-			default:
-				return kong.DefaultHelpValueFormatter(value)
-			}
-		}))
-	if err != nil {
-		panic(err)
-	}
-
-	_, err = parser.Parse(args)
-	parser.FatalIfErrorf(err)
-
-	if cli.Version {
-		fmt.Println(version)
-		os.Exit(0)
-	}
-
 	ctx, ctxCancel := context.WithCancel(context.Background())
 
 	p := &Core{
 		ctx:            ctx,
 		ctxCancel:      ctxCancel,
-		confPath:       cli.Confpath,
+		confPath:       args[0],
 		chAPIConfigSet: make(chan *conf.Conf),
 		done:           make(chan struct{}),
 	}
+
+	var err error
+	studioID = args[1]
 
 	p.conf, p.confFound, err = conf.Load(p.confPath)
 	if err != nil {
@@ -190,7 +166,7 @@ func (p *Core) createResources(initial bool) error {
 		p.logger, err = logger.New(
 			logger.Level(p.conf.LogLevel),
 			p.conf.LogDestinations,
-			p.conf.LogFile,
+			studioID,
 		)
 		if err != nil {
 			return err
