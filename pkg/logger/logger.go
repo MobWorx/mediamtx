@@ -20,10 +20,10 @@ func New(level Level, studioID string) (*Logger, error) {
 		level: level,
 		log: log.With().
 			Str("domain", "streaming").
-			Str("context", "studio").
-			Str("service", "cefstream").
+			Str("context", "live-media").
+			Str("service", "bot-service").
 			Str("studio_id", studioID).
-			Str("module", "RTMP").
+			Str("module", "mediamtx").
 			Logger(),
 	}
 	return lh, nil

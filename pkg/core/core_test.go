@@ -80,7 +80,7 @@ func writeTempFile(byts []byte) (string, error) {
 
 func newInstance(conf string) (*Core, bool) {
 	if conf == "" {
-		return New([]string{})
+		return New([]string{}, nil)
 	}
 
 	tmpf, err := writeTempFile([]byte(conf))
@@ -89,7 +89,7 @@ func newInstance(conf string) (*Core, bool) {
 	}
 	defer os.Remove(tmpf)
 
-	return New([]string{tmpf})
+	return New([]string{tmpf}, nil)
 }
 
 func TestCoreHotReloading(t *testing.T) {
@@ -103,7 +103,7 @@ func TestCoreHotReloading(t *testing.T) {
 	require.NoError(t, err)
 	defer os.Remove(confPath)
 
-	p, ok := New([]string{confPath})
+	p, ok := New([]string{confPath}, nil)
 	require.Equal(t, true, ok)
 	defer p.Close()
 
