@@ -4,6 +4,7 @@ package core
 import (
 	"context"
 	"fmt"
+	"log"
 	"os"
 	"os/signal"
 	"reflect"
@@ -12,14 +13,13 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/bluenviron/mediamtx/pkg/conf"
-	"github.com/bluenviron/mediamtx/pkg/confwatcher"
 	"github.com/bluenviron/mediamtx/pkg/externalcmd"
 	"github.com/bluenviron/mediamtx/pkg/logger"
 	"github.com/bluenviron/mediamtx/pkg/rlimit"
 )
 
 var (
-	version  = "v0.0.0"
+	version  = "v0.0.1"
 	studioID string
 )
 
@@ -43,7 +43,6 @@ type Core struct {
 	webRTCManager   *webRTCManager
 	srtServer       *srtServer
 	api             *api
-	confWatcher     *confwatcher.ConfWatcher
 
 	// in
 	chAPIConfigSet chan *conf.Conf
@@ -53,7 +52,7 @@ type Core struct {
 }
 
 // New allocates a core.
-func New(args []string) (*Core, bool) {
+func New(args []string, c *conf.Conf) (*Core, bool) {
 	ctx, ctxCancel := context.WithCancel(context.Background())
 
 	p := &Core{
@@ -67,10 +66,17 @@ func New(args []string) (*Core, bool) {
 	var err error
 	studioID = args[1]
 
-	p.conf, p.confFound, err = conf.Load(p.confPath)
-	if err != nil {
-		fmt.Printf("ERR: %s\n", err)
-		return nil, false
+	if c != nil {
+		log.Println("using ext config")
+		p.conf = c
+		p.confFound = true
+	} else {
+		log.Println("trying to read config")
+		p.conf, p.confFound, err = conf.Load(p.confPath)
+		if err != nil {
+			fmt.Printf("ERR: %s\n", err)
+			return nil, false
+		}
 	}
 
 	err = p.createResources(true)
@@ -108,43 +114,12 @@ func (p *Core) Log(level logger.Level, format string, args ...interface{}) {
 func (p *Core) run() {
 	defer close(p.done)
 
-	confChanged := func() chan struct{} {
-		if p.confWatcher != nil {
-			return p.confWatcher.Watch()
-		}
-		return make(chan struct{})
-	}()
-
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
 outer:
 	for {
 		select {
-		case <-confChanged:
-			p.Log(logger.Info, "reloading configuration (file changed)")
-
-			newConf, _, err := conf.Load(p.confPath)
-			if err != nil {
-				p.Log(logger.Error, "%s", err)
-				break outer
-			}
-
-			err = p.reloadConf(newConf, false)
-			if err != nil {
-				p.Log(logger.Error, "%s", err)
-				break outer
-			}
-
-		case newConf := <-p.chAPIConfigSet:
-			p.Log(logger.Info, "reloading configuration (API request)")
-
-			err := p.reloadConf(newConf, true)
-			if err != nil {
-				p.Log(logger.Error, "%s", err)
-				break outer
-			}
-
 		case <-interrupt:
 			p.Log(logger.Info, "shutting down gracefully")
 			break outer
@@ -439,13 +414,6 @@ func (p *Core) createResources(initial bool) error {
 		}
 	}
 
-	if initial && p.confFound {
-		p.confWatcher, err = confwatcher.New(p.confPath)
-		if err != nil {
-			return err
-		}
-	}
-
 	return nil
 }
 
@@ -610,11 +578,6 @@ func (p *Core) closeResources(newConf *conf.Conf, calledByAPI bool) {
 		closeWebRTCManager ||
 		closeSRTServer ||
 		closeLogger
-
-	if newConf == nil && p.confWatcher != nil {
-		p.confWatcher.Close()
-		p.confWatcher = nil
-	}
 
 	if p.api != nil {
 		if closeAPI {
